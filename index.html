@@ -162,10 +162,17 @@
 
     function sendToBot() {
         if (detectedIp) {
-            // Отправляем данные боту
-            tg.sendData(detectedIp);
-            // Закрываем Web App (опционально, бот может закрыть сам)
-            tg.close();
+    
+            console.log("Sending IP:", detectedIp);
+    
+            tg.sendData(JSON.stringify({
+                ip: detectedIp,
+                action: "check_ip"
+            }));
+    
+            setTimeout(() => {
+                tg.close();
+            }, 300);
         }
     }
 
