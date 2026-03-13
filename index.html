@@ -161,19 +161,7 @@
     }
 
     function sendToBot() {
-        if (detectedIp) {
-    
-            console.log("Sending IP:", detectedIp);
-    
-            tg.sendData(JSON.stringify({
-                ip: detectedIp,
-                action: "check_ip"
-            }));
-    
-            setTimeout(() => {
-                tg.close();
-            }, 300);
-        }
+        tg.sendData(detectedIp);
     }
 
     // Запускаем определение при загрузке
