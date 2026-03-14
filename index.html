@@ -3,149 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Определение офиса</title>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
-
 body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    margin:0; height:100vh; display:flex; justify-content:center; align-items:center;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
     background:linear-gradient(135deg,#667eea,#764ba2);
 }
-
-.container{
-    text-align:center;
-}
-
+.container{text-align:center;}
 .button{
-    padding:18px 30px;
-    border:none;
-    border-radius:14px;
-    font-size:18px;
-    font-weight:600;
-    color:white;
-    cursor:pointer;
-    background:linear-gradient(135deg,#4facfe,#00f2fe);
+    padding:18px 30px; border:none; border-radius:14px; font-size:18px; font-weight:600;
+    color:white; cursor:pointer; background:linear-gradient(135deg,#4facfe,#00f2fe);
     box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
-
-.button:active{
-    transform:scale(0.98);
-}
-
+.button:active{transform:scale(0.98);}
 .card{
-    margin-top:30px;
-    padding:25px;
-    border-radius:20px;
-    background:white;
-    box-shadow:0 15px 35px rgba(0,0,0,0.2);
-    width:280px;
+    margin-top:30px; padding:25px; border-radius:20px; background:white;
+    box-shadow:0 15px 35px rgba(0,0,0,0.2); width:280px;
 }
-
-.row{
-    margin:12px 0;
-    font-size:16px;
-}
-
-.label{
-    color:#888;
-    font-size:14px;
-}
-
-.value{
-    font-weight:600;
-    font-family:monospace;
-    margin-top:4px;
-}
-
-.hidden{
-    display:none;
-}
-
+.row{margin:12px 0; font-size:16px;}
+.label{color:#888; font-size:14px;}
+.value{font-weight:600; font-family:monospace; margin-top:4px;}
+.success .value{color:#28a745;}
+.error .value{color:#dc3545;}
+.hidden{display:none;}
 </style>
 </head>
-
 <body>
-
 <div class="container">
-
-<button class="button" id="detectBtn">
-Определить офис
-</button>
-
+<button class="button" id="detectBtn">Определить офис</button>
 <div class="card hidden" id="infoCard">
-
-<div class="row">
-<div class="label">IP</div>
-<div class="value" id="ipValue">...</div>
+<div class="row"><div class="label">Ваш IP</div><div class="value" id="ipValue">...</div></div>
+<div class="row"><div class="label">Офис</div><div class="value" id="officeValue">...</div></div>
 </div>
-
-<div class="row">
-<div class="label">Офис</div>
-<div class="value" id="officeValue">...</div>
-</div>
-
-</div>
-
 </div>
 
 <script>
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
 
-const tg = window.Telegram.WebApp
-tg.ready()
-tg.expand()
+const detectBtn = document.getElementById("detectBtn");
+const card = document.getElementById("infoCard");
 
-const detectBtn = document.getElementById("detectBtn")
-const card = document.getElementById("infoCard")
+// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUQcGgdOHOkpBPU85Ub0aNOD8o2XlifdQ0cSVfzS0LX1_NhjEodCnhKSpK7Ii4EnFX/exec'; // ←←← СЮДА ВСТАВЬ СВОЙ URL ПОСЛЕ РАЗВЁРТЫВАНИЯ
+// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
-detectBtn.addEventListener("click", detectOffice)
+detectBtn.addEventListener("click", detectOffice);
 
 async function detectOffice(){
+    detectBtn.disabled = true;
+    detectBtn.innerText = "Определение IP...";
 
-    detectBtn.disabled = true
-    detectBtn.innerText = "Определение..."
+    try {
+        // 1. Получаем чистый IP
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        const ip = ipData.ip;
 
-    try{
+        document.getElementById("ipValue").innerText = ip;
 
-        const res = await fetch("https://ipapi.co/json/")
-        const data = await res.json()
+        // 2. Проверяем в твоей таблице "ПВЗ"
+        const validateRes = await fetch(`${WEB_APP_URL}?ip=${ip}`);
+        const validateData = await validateRes.json();
 
-        const ip = data.ip
-        const city = data.city
-        const org = data.org || "Офис"
+        card.classList.remove("hidden");
 
-        const officeName = city + " — " + org
-
-        document.getElementById("ipValue").innerText = ip
-        document.getElementById("officeValue").innerText = officeName
-
-        card.classList.remove("hidden")
-
-        tg.sendData(JSON.stringify({
-            ip: ip,
-            office: officeName
-        }))
-
-        setTimeout(()=>{
-            tg.close()
-        },3000)
-
-    }catch(e){
-
-        detectBtn.innerText = "Ошибка. Повторить"
-
+        if (validateData.allowed) {
+            document.getElementById("officeValue").innerText = validateData.office;
+            card.classList.add("success");
+            
+            tg.sendData(JSON.stringify({ ip: ip, office: validateData.office }));
+            setTimeout(() => tg.close(), 1800);
+        } else {
+            document.getElementById("officeValue").innerText = validateData.office;
+            card.classList.add("error");
+            detectBtn.innerText = "❌ IP не разрешён. Повторить";
+            detectBtn.disabled = false;
+        }
+    } catch(e) {
+        detectBtn.innerText = "Ошибка сети. Повторить";
+        detectBtn.disabled = false;
     }
-
 }
-
 </script>
-
 </body>
 </html>
