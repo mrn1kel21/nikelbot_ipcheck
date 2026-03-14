@@ -8,11 +8,10 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-:root {
-    --tg-theme-bg-color: #f0f2f5;
-    --tg-theme-button-color: #2481cc;
-    --tg-theme-text-color: #222;
-    --accent-gradient: linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);
+:root{
+    --tg-theme-bg-color:#f0f2f5;
+    --tg-theme-button-color:#2481cc;
+    --accent-gradient:linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);
 }
 
 body{
@@ -33,22 +32,6 @@ body{
     max-width:350px;
     text-align:center;
     box-shadow:0 10px 25px rgba(0,0,0,0.1);
-}
-
-.icon-box{
-    width:70px;
-    height:70px;
-    border-radius:50%;
-    background:var(--accent-gradient);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    margin:0 auto 20px;
-}
-
-.icon-box svg{
-    width:35px;
-    fill:white;
 }
 
 .ip-display{
@@ -98,12 +81,6 @@ body{
 
 <div class="card">
 
-<div class="icon-box">
-<svg viewBox="0 0 24 24">
-<path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z"/>
-</svg>
-</div>
-
 <h2>Проверка локации</h2>
 <p id="status-text">Определяем ваш рабочий IP...</p>
 
@@ -122,6 +99,7 @@ body{
 <script>
 
 const tg = window.Telegram.WebApp
+tg.ready()
 tg.expand()
 
 let detectedIp = ""
@@ -154,10 +132,16 @@ function sendIp(){
     }
 
     tg.sendData(JSON.stringify(payload))
-    tg.close()
+
+    // важно дать Telegram время отправить данные
+    setTimeout(() => {
+        tg.close()
+    }, 400)
 }
 
-document.getElementById("send-btn").addEventListener("click", sendIp)
+document
+    .getElementById("send-btn")
+    .addEventListener("click", sendIp)
 
 window.onload = getIp
 
