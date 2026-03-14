@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Определение IP — ПВЗ Контроль</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
@@ -146,21 +147,13 @@ async function getIp(){
     }
 }
 
-async function sendIp(){
+function sendIp(){
 
-    const userId = tg.initDataUnsafe.user.id
+    const payload = {
+        ip: detectedIp
+    }
 
-    await fetch("https://your-domain.com/webapp-ip",{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            ip: detectedIp,
-            user_id: userId
-        })
-    })
-
+    tg.sendData(JSON.stringify(payload))
     tg.close()
 }
 
